@@ -41,7 +41,7 @@ data:
       dataSource {
           journalMode = "WAL"
           fullColumnNames = false
-      }                                                                                                                                                                                                                                                                                                                                  │
+      }
     }
 ---
 apiVersion: v1
