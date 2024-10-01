@@ -1,0 +1,4 @@
+auth:
+  username: wallet
+  password: wallet
+  database: wallet

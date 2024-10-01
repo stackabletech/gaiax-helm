@@ -1,0 +1,80 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: verifier-web-config
+data:
+  _features.conf : |
+    enabledFeatures = [
+        entra
+    ]
+  web.conf: |
+    webHost = "0.0.0.0"
+    webPort = 3000
+  verifier-service.conf: |
+    baseUrl = "https://verifier.{{.Values.domain}}"
+  entra.conf: |
+    callbackUrl = "https://verifier.{{.Values.domain}}/entra/verification-callback/"
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: verifier
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: verifier
+  template:
+    metadata:
+      labels:
+        app: verifier
+    spec:
+      containers:
+        - name: verifier
+          image: waltid/verifier-api:0.1.0
+          volumeMounts:
+            - name: verifier-web-config
+              mountPath: "/waltid-verifier-api/config/"
+              readOnly: true
+          ports:
+            - containerPort: 3000
+              name: http-api
+      volumes:
+        - name: verifier-web-config
+          configMap:
+            name: verifier-web-config
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: verifier
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: http-api
+      protocol: TCP
+  selector:
+    app: verifier
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: verifier
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - verifier.{{.Values.domain}}
+      secretName: ingress-verifier
+  rules:
+    - host: verifier.{{.Values.domain}}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: verifier
+                port:
+                  name: http
