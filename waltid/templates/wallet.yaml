@@ -62,18 +62,10 @@ spec:
           image: waltid/wallet-api:0.7.0
           imagePullPolicy: IfNotPresent
           volumeMounts:
-            - name: wallet-db
-              mountPath: /waltid-wallet-api/config/db.conf
-              readOnly: true
-              subPath: db.conf
             - name: wallet-config
               mountPath: /waltid-wallet-api/config/web.conf
               readOnly: true
               subPath: web.conf
-            - name: wallet-auth
-              mountPath: /waltid-wallet-api/config/auth.conf
-              readOnly: true
-              subPath: auth.conf
             - mountPath: /waltid-wallet-api/data/
               name: wallet-data
           ports:
