@@ -4,10 +4,17 @@ metadata:
   name: wallet-portal-config
 data:
   .env: |
+    {{- if .Values.tls.enabled }}
     NEXT_PUBLIC_VC_REPO: https://credentials.{{.Values.domain}}
     NEXT_PUBLIC_ISSUER: https://issuer.{{.Values.domain}}
     NEXT_PUBLIC_VERIFIER: https://verifier.{{.Values.domain}}
     NEXT_PUBLIC_WALLET: https://wallet.{{.Values.domain}}
+    {{- else }}
+    NEXT_PUBLIC_VC_REPO: http://credentials.{{.Values.domain}}
+    NEXT_PUBLIC_ISSUER: http://issuer.{{.Values.domain}}
+    NEXT_PUBLIC_VERIFIER: http://verifier.{{.Values.domain}}
+    NEXT_PUBLIC_WALLET: http://wallet.{{.Values.domain}}
+    {{- end }}
 ---
 kind: Deployment
 apiVersion: apps/v1
@@ -27,6 +34,7 @@ spec:
         - name: web-portal
           image: waltid/portal:0.7.0
           env:
+            {{- if .Values.tls.enabled }}
             - name: NEXT_PUBLIC_VC_REPO
               value: "https://credentials.{{.Values.domain}}"
             - name: NEXT_PUBLIC_ISSUER
@@ -35,6 +43,16 @@ spec:
               value: "https://verifier.si.stackable.tech"
             - name: NEXT_PUBLIC_WALLET
               value: "https://wallet.{{.Values.domain}}"
+            {{- else }}
+            - name: NEXT_PUBLIC_VC_REPO
+              value: "http://credentials.{{.Values.domain}}"
+            - name: NEXT_PUBLIC_ISSUER
+              value: "http://issuer.{{.Values.domain}}"
+            - name: NEXT_PUBLIC_VERIFIER
+              value: "http://verifier.si.stackable.tech"
+            - name: NEXT_PUBLIC_WALLET
+              value: "http://wallet.{{.Values.domain}}"
+            {{- end }}
           ports:
             - containerPort: 3000
               name: http-portal
@@ -43,6 +61,8 @@ spec:
               subPath: ".env"
               name: wallet-portal-config
               readOnly: true
+      hostAliases:
+        {{- toYaml .Values.hostAliases | nindent 6 }}
       volumes:
         - name: wallet-portal-config
           configMap:
@@ -69,10 +89,12 @@ metadata:
     cert-manager.io/cluster-issuer: letsencrypt
 spec:
   ingressClassName: nginx
+  {{- if .Values.tls.enabled }}
   tls:
     - hosts:
         - portal.{{.Values.domain}}
       secretName: ingress-portal
+  {{- end }}
   rules:
     - host: portal.{{.Values.domain}}
       http:

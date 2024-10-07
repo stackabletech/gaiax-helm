@@ -10,10 +10,17 @@ data:
   web.conf: |
     webHost = "0.0.0.0"
     webPort = 3000
+  {{- if .Values.tls.enabled }}
   verifier-service.conf: |
     baseUrl = "https://verifier.{{.Values.domain}}"
   entra.conf: |
     callbackUrl = "https://verifier.{{.Values.domain}}/entra/verification-callback/"
+  {{- else }}
+  verifier-service.conf: |
+    baseUrl = "http://verifier.{{.Values.domain}}"
+  entra.conf: |
+    callbackUrl = "http://verifier.{{.Values.domain}}/entra/verification-callback/"
+  {{- end }}
 ---
 kind: Deployment
 apiVersion: apps/v1
@@ -39,6 +46,8 @@ spec:
           ports:
             - containerPort: 3000
               name: http-api
+      hostAliases:
+        {{- toYaml .Values.hostAliases | nindent 6 }}
       volumes:
         - name: verifier-web-config
           configMap:
@@ -63,10 +72,12 @@ metadata:
   name: verifier
 spec:
   ingressClassName: nginx
+  {{- if .Values.tls.enabled }}
   tls:
     - hosts:
         - verifier.{{.Values.domain}}
       secretName: ingress-verifier
+  {{- end }}
   rules:
     - host: verifier.{{.Values.domain}}
       http:

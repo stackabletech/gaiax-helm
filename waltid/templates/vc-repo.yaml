@@ -41,10 +41,12 @@ metadata:
   name: vc-repo
 spec:
   ingressClassName: nginx
+  {{- if .Values.tls.enabled }}
   tls:
     - hosts:
         - credentials.{{.Values.domain}}
       secretName: ingress-credentials
+  {{- end }}
   rules:
     - host: credentials.{{.Values.domain}}
       http:

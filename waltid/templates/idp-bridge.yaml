@@ -24,6 +24,7 @@ spec:
           env:
             - name: DEPLOYMENT_ENVIRONMENT
               value: ccmc
+            {{- if .Values.tls.enabled }}
             - name: SERVER_BASE-URL
               value: https://idp-bridge.{{.Values.domain}}
             - name: SSI_VERIFIER_BASE-URL
@@ -34,11 +35,25 @@ spec:
               value: https://idp-bridge.{{.Values.domain}}/openid4vp/continue
             - name: SSI_WALLET_BASE-URL
               value: https://wallet.{{.Values.domain}}/
+            {{- else }}
+            - name: SERVER_BASE-URL
+              value: http://idp-bridge.{{.Values.domain}}
+            - name: SSI_VERIFIER_BASE-URL
+              value: http://idp-bridge.{{.Values.domain}}
+            - name: SSI_VERIFIER_FAILED-URL
+              value: http://idp-bridge.{{.Values.domain}}
+            - name: SSI_VERIFIER_SUCCESS-URL
+              value: http://idp-bridge.{{.Values.domain}}/openid4vp/continue
+            - name: SSI_WALLET_BASE-URL
+              value: http://wallet.{{.Values.domain}}/
+            {{- end }}
             - name: DATASOURCE_URL
               value: jdbc:h2:file:/app/data/db
           volumeMounts:
           - name: idp-bridge-h2-data
             mountPath: /app/data
+      hostAliases: 
+        {{- toYaml .Values.hostAliases | nindent 6 }}
       volumes:
         - name: idp-bridge-h2-data
           persistentVolumeClaim:
@@ -79,10 +94,12 @@ metadata:
     cert-manager.io/cluster-issuer: letsencrypt
 spec:
   ingressClassName: nginx
+  {{- if .Values.tls.enabled }}
   tls:
   - hosts:
     - idp-bridge.{{.Values.domain}}
     secretName: ingress-idp-bridge
+  {{- end }}
   rules:
     - host: idp-bridge.{{.Values.domain}}
       http:

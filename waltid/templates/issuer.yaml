@@ -7,7 +7,11 @@ data:
     webHost = "0.0.0.0"
     webPort = 3000
   issuer-service.conf: |
+    {{- if .Values.tls.enabled }}
     baseUrl = "https://issuer.{{.Values.domain}}"
+    {{- else }}
+    baseUrl = "http://issuer.{{.Values.domain}}"
+    {{- end }}
   credential-issuer-metadata.conf: |
       supportedCredentialTypes = {
       BankId = [VerifiableCredential, BankId],
@@ -50,14 +54,14 @@ data:
           format = "vc+sd-jwt"
           cryptographic_binding_methods_supported = ["jwk"]
           credential_signing_alg_values_supported = ["ES256"]
-          vct = "https://issuer.{{.Values.domain}}/urn:eu.europa.ec.eudi:pid:1"
+          vct = "http://issuer.{{.Values.domain}}/urn:eu.europa.ec.eudi:pid:1"
       }
 
       "identity_credential_vc+sd-jwt" = {
           format = "vc+sd-jwt",
           cryptographic_binding_methods_supported = ["jwk"]
           credential_signing_alg_values_supported = ["ES256"]
-          vct = "https://issuer.{{.Values.domain}}/identity_credential"
+          vct = "http://issuer.{{.Values.domain}}/identity_credential"
       }}
 
 ---
@@ -85,6 +89,8 @@ spec:
           ports:
             - containerPort: 3000
               name: http-api
+      hostAliases:
+        {{- toYaml .Values.hostAliases | nindent 6 }}
       volumes:
         - name: issuer-web-config
           configMap:
@@ -109,10 +115,12 @@ metadata:
   name: issuer
 spec:
   ingressClassName: nginx
+  {{- if .Values.tls.enabled }}
   tls:
     - hosts:
         - issuer.{{.Values.domain}}
       secretName: ingress-issuer
+  {{- end }}
   rules:
     - host: issuer.{{.Values.domain}}
       http:

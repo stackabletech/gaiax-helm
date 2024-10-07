@@ -1,2 +1,12 @@
 domain: example.com
-dbPassword: wallet
+tls:
+  enabled: false
+# /etc/hosts entries to add
+hostAliases:
+- ip: "172.18.0.2"
+  hostnames:
+  - "issuer.example.com"
+  - "wallet.example.com"
+  - "credentials.example.com"
+  - "portal.example.com"
+  - "verifier.example.com"
