@@ -52,7 +52,7 @@ spec:
           volumeMounts:
           - name: idp-bridge-h2-data
             mountPath: /app/data
-      hostAliases: 
+      hostAliases:
         {{- toYaml .Values.hostAliases | nindent 6 }}
       volumes:
         - name: idp-bridge-h2-data
